@@ -1,0 +1,110 @@
+function [x,P]= EKF_update(x,P,z,R,idf, batch)
+    % function [x,P]= update(x,P,z,R,idf, batch)
+    %
+    % Inputs:
+    %   x, P - SLAM state and covariance
+    %   z, R - range-bearing measurements and covariances
+    %   idf - feature index for each z
+    %   batch - switch to specify whether to process measurements together or sequentially
+    %
+    % Outputs:
+    %   x, P - updated state and covariance
+    packet_loss_prob = 0;
+    
+    if size(z,2) == 0
+        x = x;
+        P = P;
+        return
+    end
+    
+    if batch == 1
+        [x,P]= batch_update(x,P,z,R,idf,packet_loss_prob);
+    else
+        [x,P]= single_update(x,P,z,R,idf,packet_loss_prob);
+    end
+end
+
+%
+%
+% 批次更新
+function [x, P] = batch_update(x, P, z, R, idf, packet_loss_prob)
+    lenz = size(z, 2);
+    lenx = length(x);
+
+    % 初始化新的测量集合
+    z_new = [];
+    idf_new = [];
+    R_new = [];
+
+    % 根据丢包概率决定是否包括每个测量
+    for i = 1:lenz
+        if decideUpdate(packet_loss_prob)
+            z_new = [z_new, z(:, i)];
+            idf_new = [idf_new, idf(i)];
+            R_new = blkdiag(R_new, R);
+        end
+    end
+
+    % 更新后的测量集合长度
+    lenz_new = size(z_new, 2);
+    if lenz_new == 0
+        % 如果没有测量值，直接返回
+        return;
+    end
+
+    % 初始化H, v, RR
+    H = zeros(2 * lenz_new, lenx);
+    v = zeros(2 * lenz_new, 1);
+    RR = zeros(2 * lenz_new);
+
+    % 使用更新后的测量集合进行更新
+    for i = 1:lenz_new
+        ii = 2 * i + (-1:0);
+        [zp, H(ii, :)] = observe_model(x, idf_new(i));
+
+        v(ii) = [z_new(1, i) - zp(1);
+                 pi_to_pi(z_new(2, i) - zp(2))];
+        RR(ii, ii) = R;
+    end
+
+    % 使用新的测量集合进行卡尔曼滤波更新
+    [x, P] = KF_cholesky_update(x, P, v, RR, H);
+end
+
+
+%  单个更新
+function [x, P] = single_update(x, P, z, R, idf, packet_loss_prob)
+    % 获得多少个路标
+    lenz = size(z, 2);
+
+    % 依次更新路标进行更新
+    for i = 1:lenz
+        % 使用 decideUpdate 函数决定是否更新
+        if decideUpdate(packet_loss_prob)
+            % 根据观测模型获得观测模型预测观测值
+            [zp, H] = observe_model(x, idf(i));
+
+            % 获取预测观测值与实际观测值之间的差值
+            v = [z(1, i) - zp(1);
+                pi_to_pi(z(2, i) - zp(2))];
+
+            % 获得更新值
+            [x, P] = KF_cholesky_update(x, P, v, R, H);
+        end
+    end
+end
+
+
+function shouldUpdate = decideUpdate(packet_loss_prob)
+    % decideUpdate - 决定是否更新
+    % 根据设定的丢包概率来决定是否进行更新
+    % 输入：packet_loss_prob - 丢包概率
+    % 输出：shouldUpdate - 布尔值，决定是否进行更新
+
+    % 生成一个0到1之间的随机数
+    randomValue = rand;
+
+    % 如果随机数大于丢包概率，则进行更新
+    shouldUpdate = randomValue >= packet_loss_prob;
+end
+
