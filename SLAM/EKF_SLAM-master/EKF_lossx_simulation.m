@@ -7,16 +7,16 @@ clc;
 simulation_config
 
 % 添加文件夹
-addpath('C:\Users\Microsoft微软\Desktop\SLAM\EKF_SLAM-master\data');
-addpath('C:\Users\Microsoft微软\Desktop\SLAM\EKF_SLAM-master\functions');
-addpath('C:\Users\Microsoft微软\Desktop\SLAM\EKF_SLAM-master\pictrues');
+addpath('C:\Users\Microsoft微软\Desktop\Thesis\SLAM\EKF_SLAM-master\data');
+addpath('C:\Users\Microsoft微软\Desktop\Thesis\SLAM\EKF_SLAM-master\functions');
+addpath('C:\Users\Microsoft微软\Desktop\Thesis\SLAM\EKF_SLAM-master\pictrues');
 
 % 加载数据
-MAP_DATA = 'data/map3.mat';
+MAP_DATA = 'data/map2.mat';
 load(MAP_DATA)
 
 % 设置可变参数：丢包率和协方差scale
-packet_loss_prob = 0.2;
+packet_loss_prob = 0.0;
 set_scaleFactor = 1.05;        %1.05
     
 % 加载关键点
@@ -104,6 +104,9 @@ for k = 1:1:length
     % 获取控制量
     Vn = states(k).Vn;
     Gn = states(k).Gn;   
+    % 存储控制量
+    sim_result.controls(k).Vn = Vn;
+    sim_result.controls(k).Gn = Gn;
      
     if ASYNCHRONOUS == 0
         % EKF更新状态预测值和协方差
