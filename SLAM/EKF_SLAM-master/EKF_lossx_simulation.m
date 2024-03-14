@@ -16,8 +16,8 @@ MAP_DATA = 'data/map2.mat';
 load(MAP_DATA)
 
 % 设置可变参数：丢包率和协方差scale
-packet_loss_prob = 0.0;
-set_scaleFactor = 1.05;        %1.05
+packet_loss_prob = 0.1;
+set_scaleFactor = 1.00;        %1.05
     
 % 加载关键点
 key_points = data_original.key_points;
