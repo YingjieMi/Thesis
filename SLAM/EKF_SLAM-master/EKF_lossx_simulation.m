@@ -12,11 +12,11 @@ addpath('C:\Users\Microsoft微软\Desktop\Thesis\SLAM\EKF_SLAM-master\functions'
 addpath('C:\Users\Microsoft微软\Desktop\Thesis\SLAM\EKF_SLAM-master\pictrues');
 
 % 加载数据
-MAP_DATA = 'data/map2.mat';
+MAP_DATA = 'data/map3.mat';
 load(MAP_DATA)
 
 % 设置可变参数：丢包率和协方差scale
-packet_loss_prob = 0.1;
+packet_loss_prob = 0.2;
 set_scaleFactor = 1.00;        %1.05
     
 % 加载关键点
@@ -154,11 +154,14 @@ for k = 1:1:length
             [zf,idf, zn]= data_associate(x,P,z,RE, GATE_REJECT, GATE_AUGMENT); 
         end
         
+        % ---------------------------------------------------------
         % 更新状态向量
-        if SWITCH_USE_IEKF == 1
-            [x,P]= update_iekf(x,P,zf,RE,idf, 5);
+        if SWITCH_USE_IEKF == 1 
+            % [x,P]= update_iekf(x,P,zf,RE,idf, 5, ~packetLost);
+            [x,P]= IEKF_update_Intermittent(x,P,zf,RE,idf, 5, ~packetLost);
         else
-            [x,P]= EKF_update(x,P,zf,RE,idf, 1); 
+            [x,P]= EKF_update_Intermittent(x,P,zf,RE,idf, 1, ~packetLost);
+            % [x,P]= EKF_update(x,P,zf,RE,idf, 1); 
         end
         
         % 添加新的landmark到状态向量中
@@ -170,54 +173,54 @@ for k = 1:1:length
     % 如果检测为丢包，则使用加权平均
     %
     % 当丢包发生时，使用FIFO队列中的数据
-    if packetLost == 1
-        % 计算历史数据的平均值
-        % 初始化avgX为零数组，大小与historyX的行数相同
-        avgX = zeros(size(historyX, 1), 1);
-        
-        % 对于historyX的每一行（即每一个变量或维度），单独计算非零平均值
-        for i = 1:size(historyX, 1)
-            % 提取当前行的所有值
-            currentRowValues = historyX(i, :);
-    
-            % 生成一个逻辑索引，标识哪些值是非零的
-            validXIndices = currentRowValues ~= 0;
-    
-            % 使用逻辑索引计算非零值的平均值
-            if sum(validXIndices) > 0 % 确保分母不为零
-                avgX(i) = sum(currentRowValues(validXIndices)) / sum(validXIndices);
-            else
-                avgX(i) = 0; % 如果当前行全为零，则平均值为零
-            end
-        end
-        % 
-        % 
-        % 
-        % 对于historyV和historyG，因为它们是1D数组，处理稍有不同
-        validVIndices = historyV ~= 0;
-        avgV = sum(historyV(validVIndices)) / sum(validVIndices);
-    
-        validGIndices = historyG ~= 0;
-        avgG = sum(historyG(validGIndices)) / sum(validGIndices);
-    
-        % 计算基于avgV的最大预期位移范围
-        maxDisplacement = avgV * 5; % 假设5个时刻
-    
-        % 计算预测位姿与平均位姿之间的实际位移
-        actualDisplacement = sqrt((x(1) - avgX(1))^2 + (x(2) - avgX(2))^2);
-    
-        % % 判断实际位移是否超出最大预期位移范围
-        % if actualDisplacement > maxDisplacement
-        %     % 如果超出范围，认为预测是错误的，使用currentX作为当前位姿
-        %     x = predictCurrentPose(avgX, avgV, avgG);
-        %     disp(k);
-        % end
-    end
+    % if packetLost == 1
+    %     % 计算历史数据的平均值
+    %     % 初始化avgX为零数组，大小与historyX的行数相同
+    %     avgX = zeros(size(historyX, 1), 1);
+    % 
+    %     % 对于historyX的每一行（即每一个变量或维度），单独计算非零平均值
+    %     for i = 1:size(historyX, 1)
+    %         % 提取当前行的所有值
+    %         currentRowValues = historyX(i, :);
+    % 
+    %         % 生成一个逻辑索引，标识哪些值是非零的
+    %         validXIndices = currentRowValues ~= 0;
+    % 
+    %         % 使用逻辑索引计算非零值的平均值
+    %         if sum(validXIndices) > 0 % 确保分母不为零
+    %             avgX(i) = sum(currentRowValues(validXIndices)) / sum(validXIndices);
+    %         else
+    %             avgX(i) = 0; % 如果当前行全为零，则平均值为零
+    %         end
+    %     end
+    %     % 
+    %     % 
+    %     % 
+    %     % 对于historyV和historyG，因为它们是1D数组，处理稍有不同
+    %     validVIndices = historyV ~= 0;
+    %     avgV = sum(historyV(validVIndices)) / sum(validVIndices);
+    % 
+    %     validGIndices = historyG ~= 0;
+    %     avgG = sum(historyG(validGIndices)) / sum(validGIndices);
+    % 
+    %     % 计算基于avgV的最大预期位移范围
+    %     maxDisplacement = avgV * 5; % 假设5个时刻
+    % 
+    %     % 计算预测位姿与平均位姿之间的实际位移
+    %     actualDisplacement = sqrt((x(1) - avgX(1))^2 + (x(2) - avgX(2))^2);
+    % 
+    %     % % 判断实际位移是否超出最大预期位移范围
+    %     % if actualDisplacement > maxDisplacement
+    %     %     % 如果超出范围，认为预测是错误的，使用currentX作为当前位姿
+    %     %     x = predictCurrentPose(avgX, avgV, avgG);
+    %     %     disp(k);
+    %     % end
+    % end
 
-    % 更新FIFO队列
-    historyX = [historyX(:,2:end), x(1:3)]; % 更新x的FIFO队列
-    historyV = [historyV(2:end), Vn]; % 更新v的FIFO队列
-    historyG = [historyG(2:end), Gn]; % 更新g的FIFO队列
+    % % 更新FIFO队列
+    % historyX = [historyX(:,2:end), x(1:3)]; % 更新x的FIFO队列
+    % historyV = [historyV(2:end), Vn]; % 更新v的FIFO队列
+    % historyG = [historyG(2:end), Gn]; % 更新g的FIFO队列
 
 
     % 保存当前状态和协方差，以便下一次循环使用
@@ -225,9 +228,9 @@ for k = 1:1:length
     last_P = P;
 
     % 保存数据
-    traceP = trace(P); % 计算P的迹
-    detP = det(P); % 计算P的行列式
-    dataToSave(k, :) = [packetLost, traceP, detP];
+    % traceP = trace(P); % 计算P的迹
+    % detP = det(P); % 计算P的行列式
+    % dataToSave(k, :) = [packetLost, traceP, detP];
     
     xtrue = states(k).xtrue;
     iwp = states(k).next_keypoint;
@@ -321,5 +324,5 @@ sim_result.wp = wp;
 save sim_result sim_result;
 
 % 将数据保存到 Excel 文件中
-% 注意：如果 P 是矩阵，你可能需要将它转换为适合 Excel 单元格的格式
+% 注意：如果 P 是矩阵，可能需要将它转换为适合 Excel 单元格的格式
 % xlswrite('packet_loss_and_covariance.xlsx', dataToSave);
