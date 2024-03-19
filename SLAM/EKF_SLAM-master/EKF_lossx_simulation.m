@@ -12,11 +12,11 @@ addpath('C:\Users\Microsoft微软\Desktop\Thesis\SLAM\EKF_SLAM-master\functions'
 addpath('C:\Users\Microsoft微软\Desktop\Thesis\SLAM\EKF_SLAM-master\pictrues');
 
 % 加载数据
-MAP_DATA = 'data/map3.mat';
+MAP_DATA = 'data/map2.mat';
 load(MAP_DATA)
 
 % 设置可变参数：丢包率和协方差scale
-intermit = 1;                   % 是否使用中断算法  0不用；1用
+intermit = 0;                   % 是否使用中断算法  0不用；1用
 packet_loss_prob = 0.1;
 scaleFactor = 1.00;        %1.05
     
@@ -328,7 +328,8 @@ sim_result.EKF_pre_trajectory = EKF_pre_trajectory;
 sim_result.model_pre_trajectory = model_pre_trajectory;
 sim_result.wp = wp;
 
-save sim_result_int sim_result;
+save sim_result sim_result;
+% save sim_result_int sim_result;
 
 % 将数据保存到 Excel 文件中
 % 注意：如果 P 是矩阵，可能需要将它转换为适合 Excel 单元格的格式

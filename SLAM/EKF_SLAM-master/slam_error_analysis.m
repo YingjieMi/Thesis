@@ -10,7 +10,7 @@ loaded_data = load('SLAM_Error_Data.mat');
 % loaded_data = load('Int_SLAM_Error_Data.mat');
 
 % 选择一个特定的数据集前缀，例如 'm3'
-dataset_prefix = 'm3';
+dataset_prefix = 'm2';
 
 % 获取数据集中所有运行的名字
 runs = fieldnames(loaded_data.(dataset_prefix).e_ekf);
