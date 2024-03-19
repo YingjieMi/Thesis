@@ -3,7 +3,11 @@ clc;
 clear;
 close all;
 
+% 原始随机丢包数据集
 loaded_data = load('SLAM_Error_Data.mat');
+
+% 修改KF算法的丢包数据集
+% loaded_data = load('Int_SLAM_Error_Data.mat');
 
 % 选择一个特定的数据集前缀，例如 'm3'
 dataset_prefix = 'm3';

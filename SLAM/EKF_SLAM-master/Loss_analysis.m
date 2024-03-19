@@ -8,7 +8,8 @@ addpath('C:\Users\Microsoft微软\Desktop\SLAM\EKF_SLAM-master\functions\draw_func
 addpath('C:\Users\Microsoft微软\Desktop\SLAM\EKF_SLAM-master\functions\models\');
 
 % Add loss result
-load('sim_result.mat')
+% load('sim_result.mat')              % 未改动算法数据
+load('sim_result_int.mat')          % 中断算法数据
 EKF_pre_trajectory = sim_result.EKF_pre_trajectory;
 
 % Add original result
@@ -83,10 +84,14 @@ legend('lossy-ekf-error','ekf-error');
 
 %% 保存数据
 % 定义保存结果的基本文件名
-base_filename = 'SLAM_Error_Data.mat';
+% 原始随机丢包的文件名
+% base_filename = 'SLAM_Error_Data.mat';
+
+% 修改KF算法的丢包的文件名
+base_filename = 'Int_SLAM_Error_Data.mat';
 
 % 创建一个独特的文件名标识
-dataname = 'm3_p02';  % 每次运行时需要确保这个名称是独特的
+dataname = 'm3_p01';  % 每次运行时需要确保这个名称是独特的
 prefix = dataname(1:2);  % 提取前缀 "m3"
 
 % 检查文件是否存在

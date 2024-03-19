@@ -16,8 +16,9 @@ MAP_DATA = 'data/map3.mat';
 load(MAP_DATA)
 
 % 设置可变参数：丢包率和协方差scale
-packet_loss_prob = 0.2;
-set_scaleFactor = 1.00;        %1.05
+intermit = 1;                   % 是否使用中断算法  0不用；1用
+packet_loss_prob = 0.1;
+scaleFactor = 1.00;        %1.05
     
 % 加载关键点
 key_points = data_original.key_points;
@@ -119,7 +120,6 @@ for k = 1:1:length
     if rand < packet_loss_prob && k ~= 1 % 丢包
         % 使用上一次的状态和协方差
         % 增加协方差
-        scaleFactor = set_scaleFactor;
         x = last_x;
         P = last_P * scaleFactor;
         packetLost = 1; % 丢包
@@ -157,11 +157,18 @@ for k = 1:1:length
         % ---------------------------------------------------------
         % 更新状态向量
         if SWITCH_USE_IEKF == 1 
-            % [x,P]= update_iekf(x,P,zf,RE,idf, 5, ~packetLost);
-            [x,P]= IEKF_update_Intermittent(x,P,zf,RE,idf, 5, ~packetLost);
+            if intermit == 1
+                [x,P]= IEKF_update_Intermittent(x,P,zf,RE,idf, 5, ~packetLost);
+            else
+                [x,P]= update_iekf(x,P,zf,RE,idf, 5);
+            end
+            
         else
-            [x,P]= EKF_update_Intermittent(x,P,zf,RE,idf, 1, ~packetLost);
-            % [x,P]= EKF_update(x,P,zf,RE,idf, 1); 
+            if intermit == 1
+                [x,P]= EKF_update_Intermittent(x,P,zf,RE,idf, 1, ~packetLost);
+            else
+                [x,P]= EKF_update(x,P,zf,RE,idf, 1); 
+            end
         end
         
         % 添加新的landmark到状态向量中
@@ -321,7 +328,7 @@ sim_result.EKF_pre_trajectory = EKF_pre_trajectory;
 sim_result.model_pre_trajectory = model_pre_trajectory;
 sim_result.wp = wp;
 
-save sim_result sim_result;
+save sim_result_int sim_result;
 
 % 将数据保存到 Excel 文件中
 % 注意：如果 P 是矩阵，可能需要将它转换为适合 Excel 单元格的格式
