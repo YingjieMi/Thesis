@@ -4,17 +4,17 @@ clear;
 close all;
 
 % 原始随机丢包数据集
-loaded_data = load('SLAM_Error_Data.mat');
+% loaded_data = load('SLAM_Error_Data.mat');
 
 % 修改KF算法的丢包数据集
-% loaded_data = load('Int_SLAM_Error_Data.mat');
+loaded_data = load('Int_SLAM_Error_Data.mat');
 
 % 选择一个特定的数据集前缀，例如 'm3'
 dataset_prefix = 'm2';
 
 % 获取数据集中所有运行的名字
 runs = fieldnames(loaded_data.(dataset_prefix).e_ekf);
-num_run = length(runs);
+num_run = length(runs); 
 
 % 获取所有运行的名字并升序排序
 [sorted_runs, sortIdx] = sort(runs); % sortIdx是排序后的索引
@@ -91,7 +91,7 @@ hold off; % 结束误差范数图的绘制
 % 根据排序索引重新排列误差范数矩阵
 sorted_ekf_eN2_matrix = ekf_eN2_matrix(:, sortIdx);
 figure;
-boxplot(sorted_ekf_eN2_matrix, 'Labels', sorted_runs);
+boxplot(sorted_ekf_eN2_matrix, 'Labels', sorted_runs, 'Whisker', 2);
 title('EKF SLAM Error Norm box plot for Different Packet Loss Rates (Sorted)');
 ylabel('Error Norm');
 xlabel('Packet Loss Rate Runs (Sorted)');

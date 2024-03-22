@@ -16,13 +16,13 @@ c = [1 0.8 -0.6];
 
 % 仿真文件控制参数
 SLAM_SAVE_GIF = 1; % 0不保存gif动画，1保存gif动画
-MAP_DATA = 'map3.mat';
+% MAP_DATA = 'map3.mat';
 REDUCE_OB_FEATURES = 0;
 ASYNCHRONOUS = 0; % 是否同步
 SWITCH_ASSOCIATION_KNOWN= 0; % id是否已知
 GATE_REJECT= 4.0; % 判断为已知特征的最大距离
 GATE_AUGMENT= 25.0; % 判断为新特征的最小距离
-SWITCH_USE_IEKF = 1;
+SWITCH_USE_IEKF = 0;
 
 % 控制参数
 V= 8; % m/s，速度

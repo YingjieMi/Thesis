@@ -16,8 +16,8 @@ MAP_DATA = 'data/map2.mat';
 load(MAP_DATA)
 
 % 设置可变参数：丢包率和协方差scale
-intermit = 0;                   % 是否使用中断算法  0不用；1用
-packet_loss_prob = 0.1;
+intermit = 1;                   % 是否使用中断算法  0不用；1用
+packet_loss_prob = 0.05;
 scaleFactor = 1.00;        %1.05
     
 % 加载关键点
@@ -89,17 +89,8 @@ dataToSave = zeros(length, 3); % 假设length是迭代次数
 last_x = 0;
 last_P = 0;
 
-% 初始化FIFO队列
-historySize = 10; % 定义历史记录的大小
-arraySize = size(x);
-n = arraySize(1);
-historyX = zeros(n, historySize); % 用于x的FIFO队列
-historyX(:,1) = states(1).xtrue;
-historyV = zeros(1, historySize); % 用于v的FIFO队列
-historyV(1) = states(1).Vn;
-historyG = zeros(1, historySize); % 用于g的FIFO队列
-historyG(1) = states(1).Gn;
-
+% 设置种子为1以获得可复现的随机数序列
+rng(0); %3
 
 for k = 1:1:length
     % 获取控制量
@@ -174,61 +165,6 @@ for k = 1:1:length
         % 添加新的landmark到状态向量中
         [x,P]= augment(x,P, zn,RE); 
     end
-
-
-    %
-    % 如果检测为丢包，则使用加权平均
-    %
-    % 当丢包发生时，使用FIFO队列中的数据
-    % if packetLost == 1
-    %     % 计算历史数据的平均值
-    %     % 初始化avgX为零数组，大小与historyX的行数相同
-    %     avgX = zeros(size(historyX, 1), 1);
-    % 
-    %     % 对于historyX的每一行（即每一个变量或维度），单独计算非零平均值
-    %     for i = 1:size(historyX, 1)
-    %         % 提取当前行的所有值
-    %         currentRowValues = historyX(i, :);
-    % 
-    %         % 生成一个逻辑索引，标识哪些值是非零的
-    %         validXIndices = currentRowValues ~= 0;
-    % 
-    %         % 使用逻辑索引计算非零值的平均值
-    %         if sum(validXIndices) > 0 % 确保分母不为零
-    %             avgX(i) = sum(currentRowValues(validXIndices)) / sum(validXIndices);
-    %         else
-    %             avgX(i) = 0; % 如果当前行全为零，则平均值为零
-    %         end
-    %     end
-    %     % 
-    %     % 
-    %     % 
-    %     % 对于historyV和historyG，因为它们是1D数组，处理稍有不同
-    %     validVIndices = historyV ~= 0;
-    %     avgV = sum(historyV(validVIndices)) / sum(validVIndices);
-    % 
-    %     validGIndices = historyG ~= 0;
-    %     avgG = sum(historyG(validGIndices)) / sum(validGIndices);
-    % 
-    %     % 计算基于avgV的最大预期位移范围
-    %     maxDisplacement = avgV * 5; % 假设5个时刻
-    % 
-    %     % 计算预测位姿与平均位姿之间的实际位移
-    %     actualDisplacement = sqrt((x(1) - avgX(1))^2 + (x(2) - avgX(2))^2);
-    % 
-    %     % % 判断实际位移是否超出最大预期位移范围
-    %     % if actualDisplacement > maxDisplacement
-    %     %     % 如果超出范围，认为预测是错误的，使用currentX作为当前位姿
-    %     %     x = predictCurrentPose(avgX, avgV, avgG);
-    %     %     disp(k);
-    %     % end
-    % end
-
-    % % 更新FIFO队列
-    % historyX = [historyX(:,2:end), x(1:3)]; % 更新x的FIFO队列
-    % historyV = [historyV(2:end), Vn]; % 更新v的FIFO队列
-    % historyG = [historyG(2:end), Gn]; % 更新g的FIFO队列
-
 
     % 保存当前状态和协方差，以便下一次循环使用
     last_x = x;
@@ -322,14 +258,19 @@ end
 
 
 %% Save results and data
-sim_result.landmarks = landmarks;
-sim_result.ture_trajectory = true_trajectory;
-sim_result.EKF_pre_trajectory = EKF_pre_trajectory;
-sim_result.model_pre_trajectory = model_pre_trajectory;
-sim_result.wp = wp;
+% sim_result.landmarks = landmarks;
+% sim_result.ture_trajectory = true_trajectory;
+% sim_result.EKF_pre_trajectory = EKF_pre_trajectory;
+% sim_result.model_pre_trajectory = model_pre_trajectory;
+% sim_result.wp = wp;
+% save sim_result sim_result;
 
-save sim_result sim_result;
-% save sim_result_int sim_result;
+sim_result_int.landmarks = landmarks;
+sim_result_int.ture_trajectory = true_trajectory;
+sim_result_int.EKF_pre_trajectory = EKF_pre_trajectory;
+sim_result_int.model_pre_trajectory = model_pre_trajectory;
+sim_result_int.wp = wp;
+save sim_result_int sim_result_int;
 
 % 将数据保存到 Excel 文件中
 % 注意：如果 P 是矩阵，可能需要将它转换为适合 Excel 单元格的格式
