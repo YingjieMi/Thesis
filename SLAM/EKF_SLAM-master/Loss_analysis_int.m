@@ -82,7 +82,7 @@ legend('lossy-ekf-error','ekf-error');
 base_filename = 'Int_SLAM_Error_Data.mat';
 
 % 创建一个独特的文件名标识
-dataname = 'm2_p005';  % 每次运行时需要确保这个名称是独特的
+dataname = 'm3_p05';  % 每次运行时需要确保这个名称是独特的
 prefix = dataname(1:2);  % 提取前缀 "m3"
 
 % 检查文件是否存在

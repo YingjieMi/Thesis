@@ -21,7 +21,7 @@ for i=1:lenz
         RR(ii,ii)= R;
     else % 如果观测未到达，设置一个很大的协方差，表示这个观测非常不确定
         zz(ii)= z(:,i); % 保留原始观测值
-        RR(ii,ii)= diag([1e10, 1e10]); % 非常大的协方差
+        RR(ii,ii)= diag([20, 20]); % 非常大的协方差 10
     end
 end
 

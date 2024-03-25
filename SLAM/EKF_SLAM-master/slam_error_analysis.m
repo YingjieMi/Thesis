@@ -4,13 +4,13 @@ clear;
 close all;
 
 % 原始随机丢包数据集
-% loaded_data = load('SLAM_Error_Data.mat');
+loaded_data = load('SLAM_Error_Data.mat');
 
 % 修改KF算法的丢包数据集
-loaded_data = load('Int_SLAM_Error_Data.mat');
+% loaded_data = load('Int_SLAM_Error_Data.mat');
 
 % 选择一个特定的数据集前缀，例如 'm3'
-dataset_prefix = 'm2';
+dataset_prefix = 'm3';
 
 % 获取数据集中所有运行的名字
 runs = fieldnames(loaded_data.(dataset_prefix).e_ekf);
@@ -67,7 +67,7 @@ xlabel("ticks");
 ylabel("|\phi-error|");
 hold off; % 结束角度误差图的绘制
 
-% 如果您还想绘制 ekf_eN2 的误差范数图，您可以创建另一个图形窗口并绘制
+
 fig2 = figure;
 hold on;
 

@@ -22,7 +22,7 @@ ASYNCHRONOUS = 0; % 是否同步
 SWITCH_ASSOCIATION_KNOWN= 0; % id是否已知
 GATE_REJECT= 4.0; % 判断为已知特征的最大距离
 GATE_AUGMENT= 25.0; % 判断为新特征的最小距离
-SWITCH_USE_IEKF = 0;
+SWITCH_USE_IEKF = 1;
 
 % 控制参数
 V= 8; % m/s，速度

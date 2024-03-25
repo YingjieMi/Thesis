@@ -12,13 +12,13 @@ addpath('C:\Users\Microsoft微软\Desktop\Thesis\SLAM\EKF_SLAM-master\functions'
 addpath('C:\Users\Microsoft微软\Desktop\Thesis\SLAM\EKF_SLAM-master\pictrues');
 
 % 加载数据
-MAP_DATA = 'data/map2.mat';
+MAP_DATA = 'data/map3.mat';
 load(MAP_DATA)
 
 % 设置可变参数：丢包率和协方差scale
-intermit = 1;                   % 是否使用中断算法  0不用；1用
-packet_loss_prob = 0.05;
-scaleFactor = 1.00;        %1.05
+intermit = 0;                   % 是否使用中断算法  0不用；1用
+packet_loss_prob = 0.4;
+scaleFactor = 1.05;        %1.05
     
 % 加载关键点
 key_points = data_original.key_points;
@@ -35,13 +35,9 @@ length = size(states,2);
 if ADD_COLOR_NOISE == 1
     noise_V = gen_color_noise(length,Q(1,1),c);
     noise_G = gen_color_noise(length,Q(2,2),c);
-%     noise_r = gen_color_noise(length,R(1,1));
-%     noise_t = gen_color_noise(length,R(2,2));
     for i = 1:1:length
         states(i).Vn = states(i).V + noise_V(i);
         states(i).Gn = states(i).G + noise_G(i);
-%         states(i).Vn = states(i).V + noise_r(i);
-%         states(i).Vn = states(i).V + noise_t(i);
     end
 end
 
@@ -83,14 +79,11 @@ end
 fig = figure;
 hold on;
 
-% 初始化数据存储数组
-dataToSave = zeros(length, 3); % 假设length是迭代次数
-
-last_x = 0;
-last_P = 0;
+last_x = x;
+last_P = P;
 
 % 设置种子为1以获得可复现的随机数序列
-rng(0); %3
+rng(1); %3
 
 for k = 1:1:length
     % 获取控制量
@@ -99,43 +92,31 @@ for k = 1:1:length
     % 存储控制量
     sim_result.controls(k).Vn = Vn;
     sim_result.controls(k).Gn = Gn;
-     
-    if ASYNCHRONOUS == 0
-        % EKF更新状态预测值和协方差
-        [x,P] = EKF_predict (x,P, Vn,Gn,QE, WHEELBASE,dt);
-        % 获取仅通过模型预测的位姿
-        x_model_pre = vehicle_model(x_model_pre, Vn,Gn, WHEELBASE,dt);
+    
+    % 使用上一次的状态和协方差
+    x = last_x;
+    P = last_P;
+
+    % 随机决定是否丢包
+    if rand < packet_loss_prob && k ~= 1
+        packetLost = 1;
+    else
+        packetLost = 0;
     end
     
-    % 随机决定是否丢包
-    if rand < packet_loss_prob && k ~= 1 % 丢包
-        % 使用上一次的状态和协方差
-        % 增加协方差
-        x = last_x;
-        P = last_P * scaleFactor;
-        packetLost = 1; % 丢包
-    else
-        packetLost = 0; % 不丢包
-    end
+    % 预测阶段
+    [x,P] = EKF_predict (x,P, Vn,Gn,QE, WHEELBASE,dt);
+    % 获取仅通过模型预测的位姿
+    x_model_pre = vehicle_model(x_model_pre, Vn,Gn, WHEELBASE,dt);
+    
 
     if states(k).observation_update == 1
-        
-        if ASYNCHRONOUS == 1
-            % EKF更新状态预测值和协方差
-            [x,P] = EKF_predict (x,P, Vn,Gn,QE, WHEELBASE,dt);
-            % 获取仅通过模型预测的位姿
-            x_model_pre = vehicle_model(x_model_pre, Vn,Gn, WHEELBASE,dt);
-        end
-        % 获取观测值
-        z = states(k).zn;
-        ftag_visible = states(k).ftag_visible;
-        
-        if REDUCE_OB_FEATURES == 1
-            % 削减观测到的landmark数目
-            if size(z,2) > 1
-                z = z(:,1);
-                ftag_visible = ftag_visible(1);
-            end
+        if packetLost == 0
+            % 获取观测值
+            z = states(k).zn;
+            ftag_visible = states(k).ftag_visible;
+        else
+            P = P * scaleFactor;
         end
         
         % 数据关联
@@ -149,11 +130,10 @@ for k = 1:1:length
         % 更新状态向量
         if SWITCH_USE_IEKF == 1 
             if intermit == 1
-                [x,P]= IEKF_update_Intermittent(x,P,zf,RE,idf, 5, ~packetLost);
+                [x,P]= IEKF_update_Intermittent(x,P,zf,RE,idf, 3, ~packetLost);
             else
-                [x,P]= update_iekf(x,P,zf,RE,idf, 5);
+                [x,P]= update_iekf(x,P,zf,RE,idf, 3);
             end
-            
         else
             if intermit == 1
                 [x,P]= EKF_update_Intermittent(x,P,zf,RE,idf, 1, ~packetLost);
@@ -161,7 +141,8 @@ for k = 1:1:length
                 [x,P]= EKF_update(x,P,zf,RE,idf, 1); 
             end
         end
-        
+        % ---------------------------------------------------------
+
         % 添加新的landmark到状态向量中
         [x,P]= augment(x,P, zn,RE); 
     end
@@ -169,11 +150,6 @@ for k = 1:1:length
     % 保存当前状态和协方差，以便下一次循环使用
     last_x = x;
     last_P = P;
-
-    % 保存数据
-    % traceP = trace(P); % 计算P的迹
-    % detP = det(P); % 计算P的行列式
-    % dataToSave(k, :) = [packetLost, traceP, detP];
     
     xtrue = states(k).xtrue;
     iwp = states(k).next_keypoint;
@@ -192,9 +168,6 @@ for k = 1:1:length
     % 画出历史EKF预测轨迹
     plot( EKF_pre_trajectory(1, 1:k), EKF_pre_trajectory(2, 1:k), 'r','linewidth',3 );
     
-    % 画出历史model预测轨迹
-    plot( model_pre_trajectory(1, 1:k), model_pre_trajectory(2, 1:k), 'b-.','linewidth',3);
-    
      % 画出landmarks
     scatter( landmarks(1, :), landmarks(2, :), 'b*' );
     
@@ -212,22 +185,6 @@ for k = 1:1:length
     % EKF预测位姿
     draw_car(x,5,'r');
     
-    % 模型预测位姿
-    draw_car(x_model_pre,5,'g');
-
-    % 画出激光雷达观测范围
-    % draw_circle(xtrue(1), xtrue(2),MAX_RANGE);
-
-    if ~isempty(z)
-        % 画出激光雷达观测线
-        plines = make_laser_lines(z,xtrue);
-        % plot(plines(1,:),plines(2,:));
-        
-%         pellipses = make_covariance_ellipses(x,P);
-%         plot(pellipses(1,:),pellipses(2,:));
-    end
-    
-    % legend([truep ekfp,modelp],'true','ekf','model');
     legend('true','ekf','model');
 
     pause(0.00000001)
@@ -258,20 +215,16 @@ end
 
 
 %% Save results and data
-% sim_result.landmarks = landmarks;
-% sim_result.ture_trajectory = true_trajectory;
-% sim_result.EKF_pre_trajectory = EKF_pre_trajectory;
-% sim_result.model_pre_trajectory = model_pre_trajectory;
-% sim_result.wp = wp;
-% save sim_result sim_result;
+sim_result.landmarks = landmarks;
+sim_result.ture_trajectory = true_trajectory;
+sim_result.EKF_pre_trajectory = EKF_pre_trajectory;
+sim_result.model_pre_trajectory = model_pre_trajectory;
+sim_result.wp = wp;
+save sim_result sim_result;
 
-sim_result_int.landmarks = landmarks;
-sim_result_int.ture_trajectory = true_trajectory;
-sim_result_int.EKF_pre_trajectory = EKF_pre_trajectory;
-sim_result_int.model_pre_trajectory = model_pre_trajectory;
-sim_result_int.wp = wp;
-save sim_result_int sim_result_int;
-
-% 将数据保存到 Excel 文件中
-% 注意：如果 P 是矩阵，可能需要将它转换为适合 Excel 单元格的格式
-% xlswrite('packet_loss_and_covariance.xlsx', dataToSave);
+% sim_result_int.landmarks = landmarks;
+% sim_result_int.ture_trajectory = true_trajectory;
+% sim_result_int.EKF_pre_trajectory = EKF_pre_trajectory;
+% sim_result_int.model_pre_trajectory = model_pre_trajectory;
+% sim_result_int.wp = wp;
+% save sim_result_int sim_result_int;

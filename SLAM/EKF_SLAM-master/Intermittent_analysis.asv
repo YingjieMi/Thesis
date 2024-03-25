@@ -2,41 +2,22 @@ close all;
 clear;
 clc;
 
+% 定义常量
+dataset_name = 'm2';
+specific_run = 'm2_p005';
+
 % 原始随机丢包数据集
 loss_data = load('SLAM_Error_Data.mat');
-% 从加载的结构体中访问特定数据集
-error_dataset = loss_data.m2.e_ekf.m2_p015;
-norm_dataset = loss_data.m2.e_ekf.m2_p015;
+e_ekf = loss_data.(dataset_name).e_ekf.(specific_run);
+ekf_eN2 = loss_data.(dataset_name).ekf_eN2.(specific_run);
 
 % 修改KF算法的丢包数据集
 intermittent_data = load('Int_SLAM_Error_Data.mat');
-EKF_pre_trajectory_int = intermittent_data.specific_dataset;
-
-% % Add loss result
-% load('sim_result.mat')              % 未改动算法数据
-% EKF_pre_trajectory = sim_result.EKF_pre_trajectory;
-% 
-% % Add original result
-% load('sim_result_int.mat')          % 中断算法数据
-% EKF_pre_trajectory_int = sim_result_int.EKF_pre_trajectory;
-
-% Assessment
-true_trajectory = sim_result.ture_trajectory;
-true_trajectory_int = sim_result_int.ture_trajectory;
-model_pre_trajectory = sim_result.model_pre_trajectory;
-
-length = size(EKF_pre_trajectory,2);
+e_ekf_int = intermittent_data.(dataset_name).e_ekf.(specific_run);
+ekf_int_eN2 = intermittent_data.(dataset_name).ekf_eN2.(specific_run);
 
 
-% 计算EKF和模型预测的误差
-e_ekf = EKF_pre_trajectory - true_trajectory;
-e_ekf(3,:) = pi_to_pi(e_ekf(3,:));
-e_ekf_int = EKF_pre_trajectory_int - true_trajectory_int;
-e_ekf_int(3,:) = pi_to_pi(e_ekf_int(3,:));
-
-% 取绝对误差
-e_ekf = abs(e_ekf);
-e_ekf_int = abs(e_ekf_int);
+length = size(e_ekf_int,2);
 
 % 创建误差图形
 fig2 = figure;
@@ -67,11 +48,6 @@ plot(ticks,pi_to_pi(e_ekf(3,:)),'linewidth',2);
 plot(ticks,pi_to_pi(e_ekf_int(3,:)),'linewidth',2);
 xlabel("ticks")
 ylabel("|\phi-error|")
-
-
-% 计算每一步的误差范数
-ekf_eN2 = sqrt(sum(e_ekf.^2, 1));
-ekf_int_eN2 = sqrt(sum(e_ekf_int.^2, 1));
 hold off
 
 %% 绘制总误差
@@ -121,22 +97,53 @@ std_error_norm = std(ekf_eN2);
 max_error_norm = max(ekf_eN2);
 mean_change_rate = mean(abs(diff(ekf_eN2)));
 
-% 输出结果
-fprintf('平均误差范数: %f\n', mean_error_norm);
-fprintf('误差范数标准差: %f\n', std_error_norm);
-fprintf('最大误差范数: %f\n', max_error_norm);
-fprintf('误差范数变化的平均速度: %f\n\n', mean_change_rate);
+% % Output results
+% fprintf('Before interruption:\n');
+% fprintf('Average error norm: %f\n', mean_error_norm);
+% fprintf('Standard deviation of error norm: %f\n', std_error_norm);
+% fprintf('Maximum error norm: %f\n', max_error_norm);
+% fprintf('Average rate of change of error norm: %f\n\n', mean_change_rate);
 
-
-% 计算统计数据
+% Calculate statistics
 mean_error_norm_int = mean(ekf_int_eN2);
 std_error_norm_int = std(ekf_int_eN2);
 max_error_norm_int = max(ekf_int_eN2);
 mean_change_rate_int = mean(abs(diff(ekf_int_eN2)));
 
-% 输出结果
-fprintf('平均误差范数: %f\n', mean_error_norm_int);
-fprintf('误差范数标准差: %f\n', std_error_norm_int);
-fprintf('最大误差范数: %f\n', max_error_norm_int);
-fprintf('误差范数变化的平均速度: %f\n', mean_change_rate_int);
+% % Output results
+% fprintf('After interruption:\n');
+% fprintf('Average error norm: %f\n', mean_error_norm_int);
+% fprintf('Standard deviation of error norm: %f\n', std_error_norm_int);
+% fprintf('Maximum error norm: %f\n', max_error_norm_int);
+% fprintf('Average rate of change of error norm: %f\n', mean_change_rate_int);
+
+% Display results in table format
+disp(' ');
+disp('----------------------------------------------------------------------');
+disp('|                          | Before Interruption | After Interruption |');
+disp('|---------------------------------------------------------------------|');
+disp(sprintf('| Average Error Norm       | %18.4f | %17.4f |', mean_error_norm, mean_error_norm_int));
+disp(sprintf('| Error Norm Std Dev       | %18.4f | %17.4f |', std_error_norm, std_error_norm_int));
+disp(sprintf('| Maximum Error Norm       | %18.4f | %17.4f |', max_error_norm, max_error_norm_int));
+disp(sprintf('| Avg Rate of Error Change | %18.4f | %17.4f |', mean_change_rate, mean_change_rate_int));
+disp('----------------------------------------------------------------------');
+
+% 定义表头和数据
+headers = {'', 'Before Interruption', '中断后'};
+data = {'平均误差范数', mean_error_norm, mean_error_norm_int; ...
+        '误差范数标准差', std_error_norm, std_error_norm_int; ...
+        '最大误差范数', max_error_norm, max_error_norm_int; ...
+        '误差范数变化的平均速度', mean_change_rate, mean_change_rate_int};
+
+% 显示表头
+disp('----------------------------------------------------');
+disp(sprintf('%-22s | %-10s | %-10s |', headers{:}));
+disp('----------------------------------------------------');
+
+% 显示数据
+for i = 1:size(data, 1)
+    disp(sprintf('%-22s | %-10.2f | %-10.2f |', data{i, :}));
+end
+disp('----------------------------------------------------');
+
 

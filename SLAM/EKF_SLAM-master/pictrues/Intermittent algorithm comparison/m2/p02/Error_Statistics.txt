@@ -1,0 +1,13 @@
+----------------------------------------------------------------------
+|                                 m2_p02                                    |
+----------------------------------------------------------------------
+|                                 | Before Interruption | After Interruption |
+|---------------------------------------------------------------------|
+| Average Error Norm      |              2.3596 |             2.2625 |
+| Error Norm Std Dev       |              1.7685 |             1.6997 |
+| Maximum Error Norm   |              5.2888 |             6.1698 |
+----------------------------------------------------------------------
+
+Average error norm improvement rate: 4.12%
+Error norm standard deviation improvement rate: 3.89%
+Maximum error norm improvement rate: -16.66%
