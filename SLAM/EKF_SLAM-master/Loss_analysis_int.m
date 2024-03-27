@@ -13,7 +13,6 @@ EKF_pre_trajectory_original = sim_result_original.EKF_pre_trajectory;
 % Assessment
 true_trajectory = sim_result_int.ture_trajectory;
 true_trajectory_original = sim_result_original.ture_trajectory;
-model_pre_trajectory = sim_result_int.model_pre_trajectory;
 
 length = size(EKF_pre_trajectory,2);
 
@@ -82,7 +81,7 @@ legend('lossy-ekf-error','ekf-error');
 base_filename = 'Int_SLAM_Error_Data.mat';
 
 % 创建一个独特的文件名标识
-dataname = 'm3_p05';  % 每次运行时需要确保这个名称是独特的
+dataname = 'm3_p035';  % 每次运行时需要确保这个名称是独特的
 prefix = dataname(1:2);  % 提取前缀 "m3"
 
 % 检查文件是否存在
