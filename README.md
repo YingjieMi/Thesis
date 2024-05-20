@@ -28,9 +28,9 @@
 4. To compare the errors of Loss-Compensated and normal EKF under the same packet loss rate, run `Intermittent_analysis.m`.
 
 
-#本文档主要说明如何操作代码以模拟EKF SLAM，以及说明各代码功能和数据集内容
+##本文档主要说明如何操作代码以模拟EKF SLAM，以及说明各代码功能和数据集内容
 
-#数据集
+##数据集
 SLAM_Error_Data.mat 是EKF在不同间隙观测丢包率的机器人真实路径和EKF预测路径数据集
 sim_result_original_3.mat 是使用map 3时，没有丢包情况下的机器人真实路径和EKF预测路径数据集
 sim_result_original.mat 是使用map 2时，没有丢包情况下的机器人真实路径和EKF预测路径数据集
@@ -38,7 +38,7 @@ sim_result_int.mat 是当前保存的使用Loss-Compensated方法的机器人真
 sim_result.mat 是当前保存的机器人真实路径和EKF预测路径数据集
 Int_SLAM_Error_Data.mat 是Loss-Compensated EKF在不同间隙观测丢包率的机器人真实路径和EKF预测路径数据集
 
-#代码
+##代码
 slam_error_analysis_compare.m 所有丢包情况下是否使用Loss-Compensated EKF的误差中位数对比
 slam_error_analysis.m 用来对比同一个地图的不同丢包概率下EKF SLAM的误差
 simulation_config.m 模拟文件的各个参数
@@ -53,7 +53,7 @@ ATE.m 计算当前轨迹的ATE
 
 
 
-#操作流程
+##操作流程
 1.先在EKF_lossx_simulation.m中修改丢包率packet_loss_prob，然后运行，使用Loss-Compensated和normal EKF的轨迹都会保存
 2.然后分别修改命名和运行Loss_analysis_int.m和Loss_analysis.m
 3.如果需要查看所有丢包率下的特定EKF的误差对比，运行slam_error_analysis.m
