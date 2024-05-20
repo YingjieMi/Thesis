@@ -26,7 +26,7 @@ hold on;
 
 % 遍历每个运行，绘制 x 方向的误差
 for i = 1:num_run
-    run_name = runs{i};
+    run_name = sorted_runs{i};
     e_ekf = loaded_data.(dataset_prefix).e_ekf.(run_name);
     ekf_eN2 = loaded_data.(dataset_prefix).ekf_eN2.(run_name);
 
@@ -38,16 +38,18 @@ end
 
 % 设置图例
 title("EKF SLAM x, y, φ error in different packet loss");
+% title("x, y, φ error of EKF SLAM with intermittent in different packet loss");
 xlabel("ticks");
 ylabel("|x-error|");
-legend(runs, 'Location', 'northeast'); % 显示图例，每个run的名字
+legend(sorted_runs, 'Location', 'northwest'); % 使用排序后的运行名显示图例
 hold off; % 结束x方向的误差图的绘制
+
 
 % 继续绘制y方向和角度的误差对比图，接下来是y方向的误差对比图
 subplot(3, 1, 2);
 hold on;
 for i = 1:num_run
-    run_name = runs{i};
+    run_name = sorted_runs{i};
     e_ekf = loaded_data.(dataset_prefix).e_ekf.(run_name);
     plot(ticks, abs(e_ekf(2, :)), 'linewidth', 2);
 end
@@ -59,7 +61,7 @@ hold off; % 结束y方向的误差图的绘制
 subplot(3, 1, 3);
 hold on;
 for i = 1:num_run
-    run_name = runs{i};
+    run_name = sorted_runs{i};
     e_ekf = loaded_data.(dataset_prefix).e_ekf.(run_name);
     plot(ticks, wrapToPi(e_ekf(3, :)), 'linewidth', 2);
 end
@@ -75,7 +77,7 @@ hold on;
 ekf_eN2_matrix = [];
 
 for i = 1:num_run
-    run_name = runs{i};
+    run_name = sorted_runs{i};
     ekf_eN2 = loaded_data.(dataset_prefix).ekf_eN2.(run_name);
     ekf_eN2_matrix(:, i) = ekf_eN2;  % 假设ekf_eN2是列向量
     plot(ticks, ekf_eN2, 'linewidth', 2);
@@ -83,7 +85,8 @@ end
 xlabel("ticks");
 ylabel("error norm");
 title("EKF SLAM Error Norm for different packet loss");
-legend(runs); % 显示图例，每个run的名字
+% title("Error Norm of EKF SLAM with intermittent for different packet loss");
+legend(sorted_runs,'Location','northwest'); % 显示图例，每个run的名字
 hold off; % 结束误差范数图的绘制
 
 %% 创建升序排列的箱型图
@@ -92,7 +95,8 @@ hold off; % 结束误差范数图的绘制
 sorted_ekf_eN2_matrix = ekf_eN2_matrix(:, sortIdx);
 figure;
 boxplot(sorted_ekf_eN2_matrix, 'Labels', sorted_runs, 'Whisker', 2);
-title('EKF SLAM Error Norm box plot for Different Packet Loss Rates (Sorted)');
+title('EKF SLAM Error Norm box plot for Different Packet Loss Rates');
+% title('Error Norm box plot for EKF SLAM with intermittent');
 ylabel('Error Norm');
 xlabel('Packet Loss Rate Runs (Sorted)');
 

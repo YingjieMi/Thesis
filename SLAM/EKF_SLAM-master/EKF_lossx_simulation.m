@@ -16,7 +16,7 @@ MAP_DATA = 'data/map3.mat';
 load(MAP_DATA)
 
 % 设置可变参数：丢包率和协方差scale
-packet_loss_prob = 0.35;
+packet_loss_prob = 0.3;
 scaleFactor = 1.05;        %1.05
     
 % 加载关键点
@@ -110,7 +110,6 @@ for k = 1:1:length
         [zf,idf, zn]= data_associate(x,P,z,RE, GATE_REJECT, GATE_AUGMENT); 
         [zf_int,idf_int, zn_int]= data_associate(x_int,P_int,z,RE, GATE_REJECT, GATE_AUGMENT); 
 
-        
         % ---------------------------------------------------------
         % 更新状态向量
         if SWITCH_USE_IEKF == 1 
@@ -192,9 +191,7 @@ for k = 1:1:length
     sim_result.states(k).x_model_pre = x_model_pre;
     sim_result.states(k).x = x;
     sim_result.states(k).P = P;
-    
 end
-
 
 %% Save results and data
 sim_result.landmarks = landmarks;
